@@ -127,32 +127,34 @@ def main():
     raw = input("Enter base filename (default: webwork-problems): ").strip()
     base = sanitize_basename(raw or "webwork-problems")
 
-    subfolder = unique_subfolder(ROOT, base)
-    subfolder.mkdir(parents=True, exist_ok=False)
-    print(f'Created folder: "{subfolder}"')
+    pg_dir = "pg-folders/" + base
+    pg_subfolder = unique_subfolder(ROOT, pg_dir)
+    pg_subfolder.mkdir(parents=True, exist_ok=False)
+
+    print(f'\n\nCreated folder: "{pg_dir}"\n')
 
     big_text = capture_lines_until_ctrl_c()
 
+    print("\n\nCtrl-C Pressed. Processing zip-files...\n")
+
     if not big_text.strip():
         print("No input detected. Nothing to do.")
-        # Per your preference: do NOT auto-clean.
         return
 
     blocks = extract_pg_blocks_tokenized(big_text)
     if not blocks:
         print("No 'DOCUMENT(); ... ENDDOCUMENT();' blocks found. Aborting.")
-        # Per your preference: do NOT auto-clean.
         sys.exit(1)
 
     for i, block in enumerate(blocks, start=1):
         fname = f"{base}-{i}.pg"
-        path = subfolder / fname
+        path = pg_subfolder / fname
         with path.open("w", encoding="utf-8", newline="\n") as f:
             f.write(block)
         print(f'Saved: "{path}"')
-
-    zip_path = unique_zip_path(ROOT, subfolder.name)
-    make_archive(subfolder, zip_path)
+    
+    zip_path = unique_zip_path(ROOT, base)
+    make_archive(pg_subfolder, zip_path)
     print(f'\nCreated zip: "{zip_path}"')
     print("Done.")
 
